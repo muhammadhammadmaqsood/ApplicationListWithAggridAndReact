@@ -16,16 +16,20 @@ import { ColDef, Grid, GridOptions, GridReadyEvent } from "ag-grid-community";
 
 const Applications = () => {
   const gridRef = useRef();
+  let [applications, setApplications] = useState([]);
+  let [organisationSetup, setOrganisationSetup] = useState([]);
+  let filtersSettings=false;
   const DeSelectAll = useCallback(() => {
     gridRef.current.api.deselectAll();
   });
-
   const ArchiveAll = useCallback(() => {
     alert("Are you sure you want to archive all?");
   }, []);
+  const ClearFilter = useCallback(() => {
+    filtersSettings=false;
+  });
 
-  let [applications, setApplications] = useState([]);
-  let [organisationSetup, setOrganisationSetup] = useState([]);
+
 
   let [stages, setStages] = useState([]);
   let [statuses, setStatuses] = useState([]);
@@ -91,6 +95,47 @@ const Applications = () => {
     }),
     []
   );
+
+  const GetApplications = ()=>{
+    let myHeader={ 
+          'Content-Type': 'application/json',
+        'Accept': 'appicatilon/json'
+       };
+       let myApplications =new Request("./api_response/GetApplications.json");
+        fetch(myApplications,myHeader)
+        .then((result) => result.json())
+        .then((data) => setApplications(data));
+  }
+  const GetOrganizationSetup = ()=>{
+    let myHeader={ 
+          'Content-Type': 'application/json',
+        'Accept': 'appicatilon/json'
+       };
+       let myOrganizationSetup =new Request("./api_response/GetPositions.json");
+        fetch(myOrganizationSetup,myHeader)
+        .then((result) => result.json())
+        .then((data) => setOrganisationSetup(data));
+  }
+  const GetStages = ()=>{
+    let myHeader={ 
+          'Content-Type': 'application/json',
+        'Accept': 'appicatilon/json'
+       };
+       let myStages =new Request("./api_response/GetStages.json");
+        fetch(myStages,myHeader)
+        .then((result) => result.json())
+        .then((data) => setStages(data));
+  }
+  const GetStatuses = ()=>{
+    let myHeader={ 
+          'Content-Type': 'application/json',
+        'Accept': 'appicatilon/json'
+       };
+       let myStatuses =new Request("./api_response/GetStatuses.json");
+        fetch(myStatuses,myHeader)
+        .then((result) => result.json())
+        .then((data) => setStatuses(data));
+  }
   const data = useEffect(() => {
     const requestOptions = {
       method: "POST",
@@ -140,29 +185,28 @@ const Applications = () => {
         //}
       ),
     };
-    fetch(
-      "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetApplications",
-      requestOptions
-    )
-      .then((result) => result.json())
-      .then((data) => setApplications(data));
-    fetch(
-      "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetPositions"
-    )
-      .then((result) => result.json())
-      .then((data) => setOrganisationSetup(data));
+  
+    GetApplications();
+    GetOrganizationSetup();
+    GetStages();
+    GetStatuses();
+    // fetch(
+    //   "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetPositions"
+    // )
+    //   .then((result) => result.json())
+    //   .then((data) => setOrganisationSetup(data));
 
-    fetch(
-      "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetStages"
-    )
-      .then((result) => result.json())
-      .then((data) => setStages(data));
+    // fetch(
+    //   "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetStages"
+    // )
+    //   .then((result) => result.json())
+    //   .then((data) => setStages(data));
 
-    fetch(
-      "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetStatus"
-    )
-      .then((result) => result.json())
-      .then((data) => setStatuses(data));
+    // fetch(
+    //   "https://afe84190-edab-473f-a319-4f69b87c9388.mock.pstmn.io/api/employees/GetStatus"
+    // )
+    //   .then((result) => result.json())
+    //   .then((data) => setStatuses(data));
   }, []);
   const departmentsUnique = [
     ...new Set(organisationSetup.map((d) => d.department)),
@@ -175,12 +219,15 @@ const Applications = () => {
   ];
   return (
     <>
-      <div className="ag-theme-alpine" style={{ height: 1000 }}>
-        <h2>Applications</h2>
-        <button onClick={DeSelectAll}>Deselect All</button>
-        <button onClick={ArchiveAll}>Archive All</button>
-        <label htmlFor="departments">Department:</label>
-        <select name="departments" id="departments">
+    <h2>Applications</h2>
+    <div className="row">
+      <div className="col-md-2">
+        <div className="form-group">
+        <label htmlFor="departments" className="control-label">Department:</label>
+        <select name="departments" id="departments" className="form-control">
+        <option  value="">
+                All
+              </option>
           {departmentsUnique.map((m, i) => {
             return (
               <option key={i} value={m}>
@@ -189,8 +236,15 @@ const Applications = () => {
             );
           })}
         </select>
-        <label htmlFor="positions">Position:</label>
-        <select name="positions" id="positions">
+        </div>
+      </div>
+      <div className="col-md-2">
+<div className="form-group">
+<label htmlFor="positions">Position:</label>
+        <select name="positions" id="positions" className="form-control">
+        <option  value="">
+                All
+              </option>
           {positionsUnique.map((p, i) => {
             return (
               <option key={i} value={p}>
@@ -199,8 +253,15 @@ const Applications = () => {
             );
           })}
         </select>
+</div>
+      </div>
+      <div className="col-md-2">
+        <div className="form-group">
         <label htmlFor="locations">Location:</label>
-        <select name="locations" id="locations">
+        <select name="locations" id="locations" className="form-control">
+        <option  value="">
+                All
+              </option>
           {locationsUnique.map((l, i) => {
             return (
               <option key={i} value={l}>
@@ -209,8 +270,12 @@ const Applications = () => {
             );
           })}
         </select>
+        </div>
+      </div>
+        <div className="col-md-2">
+        <div className="form-group">
         <label htmlFor="stages">Stage:</label>
-        <select name="stages" id="stages">
+        <select name="stages" id="stages" className="form-control">
           {stages.map((s, i) => {
             return (
               <option key={i} value={s}>
@@ -219,8 +284,12 @@ const Applications = () => {
             );
           })}
         </select>
+        </div>
+        </div>
+        <div className="col-md-2">
+        <div className="form-group">
         <label htmlFor="statuses">Status:</label>
-        <select name="statuses" id="statuses">
+        <select name="statuses" id="statuses" className="form-control">
           {statuses.map((s, i) => {
             return (
               <option key={i} value={s}>
@@ -229,6 +298,29 @@ const Applications = () => {
             );
           })}
         </select>
+       
+        </div>
+      </div>
+    </div>
+    <p></p>
+    <div className="row">
+    <div className="col-md-2">
+    <div className="form-group">
+        <input type="button" className="btn btn-primary" value="Deselect All" onClick={DeSelectAll}/>
+       </div>
+       </div>
+
+       <div className="col-md-2">
+       <div className="form-group">
+        <input type="button" className="btn btn-primary" value="Archive All" onClick={ArchiveAll}/>
+       </div>
+       </div>
+    </div>
+    
+      <p></p>
+      
+      <div className="ag-theme-alpine" style={{ height: 1000 }}>
+
         <p></p>
         <AgGridReact
           ref={gridRef}

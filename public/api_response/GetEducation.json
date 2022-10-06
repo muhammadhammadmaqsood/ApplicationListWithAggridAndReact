@@ -1,0 +1,23 @@
+[
+    {
+        "city": "KARACHI",
+        "graduationYear": 2009,
+        "name": "BISE",
+        "qualification": "Certificate",
+        "subject": "PRE ENGINEERING"
+    },
+    {
+        "city": "KARACHI",
+        "graduationYear": 2012,
+        "name": "JAMIA MILLIA COLLEGE KARACHI",
+        "qualification": "BA/BS",
+        "subject": "COMMERCE"
+    },
+    {
+        "city": "KARACHI",
+        "graduationYear": 2018,
+        "name": "AISHA BAWANY COLLEGE",
+        "qualification": "MA/MS",
+        "subject": "I.R"
+    }
+]
