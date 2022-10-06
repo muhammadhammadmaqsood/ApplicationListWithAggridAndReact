@@ -23,7 +23,12 @@ const Applications = () => {
     gridRef.current.api.deselectAll();
   });
   const ArchiveAll = useCallback(() => {
-    alert("Are you sure you want to archive all?");
+    if(window.confirm("Are you sure you want to archive selected applications?")===true){
+       window.alert("Archived!");
+    }
+    else{
+
+    }
   }, []);
   const ClearFilter = useCallback(() => {
     filtersSettings=false;
@@ -313,6 +318,18 @@ const Applications = () => {
        <div className="col-md-2">
        <div className="form-group">
         <input type="button" className="btn btn-primary" value="Archive All" onClick={ArchiveAll}/>
+       </div>
+       </div>
+       <div className="col-md-3">
+       <div className="form-check">
+        <input type="checkbox" className="form-check-input" id="cbDisplayMyActionItems" value="" />
+        <label className="form-check-label" htmlFor="cbDisplayMyActionItems">Display my action items</label>
+       </div>
+       </div>
+       <div className="col-md-3">
+       <div className="form-check">
+        <input type="checkbox" className="form-check-input" id="cbExcludeArchive" value="" />
+        <label className="form-check-label" htmlFor="cbExcludeArchive">Excluded Archive</label>
        </div>
        </div>
     </div>
