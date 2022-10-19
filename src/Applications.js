@@ -1,8 +1,8 @@
 import logo from "./logo.svg";
 import "./App.css";
 import { AgGridReact } from "ag-grid-react";
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSSfunction
+import 'ag-grid-community/dist/styles/ag-grid.css'; // Core grid CSS, always needed
+import 'ag-grid-community/dist/styles/ag-theme-alpine.css';// Optional theme CSSfunction
 import React, {
   useState,
   useEffect,
@@ -12,10 +12,43 @@ import React, {
   Component,
   memo,
 } from "react";
-import { ColDef, Grid, GridOptions, GridReadyEvent } from "ag-grid-community";
+import {LicenseManager} from "ag-grid-enterprise";
+//import "ag-grid-enterprise";
+LicenseManager.setLicenseKey("CompanyName=Zapways Inc.,LicensedApplication=Zapways,LicenseType=SingleApplication,LicensedConcurrentDeveloperCount=2,LicensedProductionInstancesCount=1,AssetReference=AG-032998,SupportServicesEnd=16_September_2023_[v2]_MTY5NDgxODgwMDAwMA==9e022f7e559e700b159e59f21effa4a7");
 
+function ServerSideDatasource(server) {
+  return {
+    getRows: function(params) {
+      console.log('[Datasource] - rows requested by grid: ', params.request);
+      var response = server.getData(params.request);
+      setTimeout(function() {
+        if (response.success) {
+          params.successCallback(response.rows, response.lastRow);
+        } else {
+          params.failCallback();
+        }
+      }, 200);
+    },
+  };
+}
+
+function FakeServer(allData) {
+  // alasql.options.cache = false;
+ 
+   return {
+     getData: function(request) {
+       //var results = executeQuery(request);
+       return {
+         success: true,
+         rows: allData,
+         lastRow: allData.length,
+       };
+     }
+   };
+ }
 const Applications = () => {
   const gridRef = useRef();
+  let [department, setDepartment] = useState("");
   let [applications, setApplications] = useState([]);
   let [organisationSetup, setOrganisationSetup] = useState([]);
   let filtersSettings=false;
@@ -25,6 +58,7 @@ const Applications = () => {
   const ArchiveAll = useCallback(() => {
     if(window.confirm("Are you sure you want to archive selected applications?")===true){
        window.alert("Archived!");
+       gridRef.current.api.deselectAll();
     }
     else{
 
@@ -35,7 +69,38 @@ const Applications = () => {
   });
 
 
+ const onGridReady = params => {
+    let myHeader={ 
+      'Content-Type': 'application/json',
+    'Accept': 'appicatilon/json'
+   };
+   let myApplications =new Request("./api_response/GetApplications.json");
+    
+  //console.log(myData);
+    const httpRequest = new XMLHttpRequest();
+    const updateData = data => {
+      var idSequence = 1;
+      data.forEach(function(item) {
+        item.id = idSequence++;
+      });
+    
+      var fakeServer = new FakeServer(data);
+       var datasource = new ServerSideDatasource(fakeServer);
+       params.api.setServerSideDatasource(datasource);
+    }
 
+    httpRequest.open(
+      'GET',
+      'https://raw.githubusercontent.com/ag-grid/ag-grid/master/grid-packages/ag-grid-docs/src/olympicWinners.json'
+    );
+    httpRequest.send();
+    httpRequest.onreadystatechange = () => {
+      if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+        updateData(JSON.parse(httpRequest.responseText));
+      }
+    };
+      //let myData=fetch(myApplications,myHeader).then(result=>result.json()).then(data=>  updateData(data));
+  }
   let [stages, setStages] = useState([]);
   let [statuses, setStatuses] = useState([]);
   //Columns Fields.
@@ -88,7 +153,21 @@ const Applications = () => {
       field: "status",
     },
   ]);
-
+let columnsDefs= [
+  {
+    field: 'id',
+    maxWidth: 75,
+  },
+  {
+    field: 'athlete',
+    minWidth: 190,
+  },
+  { field: 'age' },
+  { field: 'year' },
+  { field: 'gold' },
+  { field: 'silver' },
+  { field: 'bronze' },
+];
   //Columns Defualt Settings
   const defaultColumnsDefs = useMemo(
     () => ({
@@ -101,16 +180,16 @@ const Applications = () => {
     []
   );
 
-  const GetApplications = ()=>{
-    let myHeader={ 
-          'Content-Type': 'application/json',
-        'Accept': 'appicatilon/json'
-       };
-       let myApplications =new Request("./api_response/GetApplications.json");
-        fetch(myApplications,myHeader)
-        .then((result) => result.json())
-        .then((data) => setApplications(data));
-  }
+  // const GetApplications = ()=>{
+  //   let myHeader={ 
+  //         'Content-Type': 'application/json',
+  //       'Accept': 'appicatilon/json'
+  //      };
+  //      let myApplications =new Request("./api_response/GetApplications.json");
+  //       fetch(myApplications,myHeader)
+  //       .then((result) => result.json())
+  //       .then((data) => setApplications(data));
+  // }
   const GetOrganizationSetup = ()=>{
     let myHeader={ 
           'Content-Type': 'application/json',
@@ -142,6 +221,7 @@ const Applications = () => {
         .then((data) => setStatuses(data));
   }
   const data = useEffect(() => {
+
     const requestOptions = {
       method: "POST",
       // headers: { 'Content-Type': 'application/json' },
@@ -191,7 +271,7 @@ const Applications = () => {
       ),
     };
   
-    GetApplications();
+    //GetApplications();
     GetOrganizationSetup();
     GetStages();
     GetStatuses();
@@ -212,16 +292,27 @@ const Applications = () => {
     // )
     //   .then((result) => result.json())
     //   .then((data) => setStatuses(data));
-  }, []);
+  });
+  let options = null;
+  
   const departmentsUnique = [
     ...new Set(organisationSetup.map((d) => d.department)),
   ];
-  const positionsUnique = [
+  let positionsUnique = [
     ...new Set(organisationSetup.map((p) => p.position)),
   ];
   const locationsUnique = [
     ...new Set(organisationSetup.map((p) => p.location)),
   ];
+  const onDepartmentChange = (params)=>{
+    setDepartment(params);
+}
+if(department!="")
+{
+   positionsUnique= [...new Set(organisationSetup.filter(o=>o.department==department).map(d=>d.position))];
+}
+
+  options=positionsUnique.map((p,i)=> <option key={i} value={p}>{p}</option>);
   return (
     <>
     <h2>Applications</h2>
@@ -229,7 +320,7 @@ const Applications = () => {
       <div className="col-md-2">
         <div className="form-group">
         <label htmlFor="departments" className="control-label">Department:</label>
-        <select name="departments" id="departments" className="form-control">
+        <select name="departments" id="departments" className="form-control" onChange={e=>onDepartmentChange(e.target.value)}>
         <option  value="">
                 All
               </option>
@@ -250,13 +341,16 @@ const Applications = () => {
         <option  value="">
                 All
               </option>
-          {positionsUnique.map((p, i) => {
-            return (
-              <option key={i} value={p}>
-                {p}
-              </option>
-            );
-          })}
+          {
+          options
+          // positionsUnique.map((p, i) => {
+          //   return (
+          //     <option key={i} value={p}>
+          //       {p}
+          //     </option>
+          //   );
+          // })
+          }
         </select>
 </div>
       </div>
@@ -341,11 +435,17 @@ const Applications = () => {
         <p></p>
         <AgGridReact
           ref={gridRef}
-          rowData={applications}
-          columnDefs={applicationColumns}
+        //  rowData={applications}
+          columnDefs={columnsDefs}
           defaultColDef={defaultColumnsDefs}
           animateRows={true}
-          rowSelection={"multiple"}
+         rowSelection={"multiple"}
+        sideBar={true}
+         rowModelType= {'serverSide'}
+         pagination={true}
+         paginationPageSize={10}
+         cacheBlockSize={10}
+         onGridReady={onGridReady}
         />
       </div>
     </>
