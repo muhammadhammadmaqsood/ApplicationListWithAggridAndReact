@@ -4,16 +4,20 @@ import "./index.css";
 import App from "./App";
 import AgGrid from "./AgGrid";
 import Applications from "./Applications";
+import TestCode from "./TestCode";
 import reportWebVitals from "./reportWebVitals";
 import 'bootstrap/dist/css/bootstrap.css';
  import 'bootstrap/dist/js/bootstrap.bundle.js';
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
-    {/* <App /> */}
+    
     {/* <AgGrid /> */}
+    
     <div className="container">
-    <Applications />
+    {/* <App /> */}
+     <Applications />
+    <TestCode/>
     </div>
   
   </React.StrictMode>
